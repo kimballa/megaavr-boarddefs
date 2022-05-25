@@ -9,8 +9,8 @@ gremega809.pid.0=0x0058
 
 gremega809.upload.tool=avrdude
 gremega809.upload.protocol=jtag2updi
-gremega809.upload.maximum_size=49152
-gremega809.upload.maximum_data_size=6144
+gremega809.upload.maximum_size=8192
+gremega809.upload.maximum_data_size=1024
 gremega809.upload.speed=115200
 gremega809.upload.use_1200bps_touch=true
 gremega809.upload.extra_params=-P{serial.port}

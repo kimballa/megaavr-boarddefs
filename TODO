@@ -3,3 +3,4 @@
 * Create board manager url repo that references this repo.
   See https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
   as a place to start from.
+* Set up pins_arduino.h, variant.h, variant.cpp in gremega809 variant.
