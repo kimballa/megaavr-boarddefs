@@ -1,12 +1,12 @@
 
-# Arduino AVR Core and platform.
+# Gremblor megaAVR Core and platform
 # ------------------------------
 #
 # For more info:
-# https://arduino.github.io/arduino-cli/latest/platform-specification/
+# https://github.com/kimballa/megaavr-boarddefs
 
-name=Arduino megaAVR Boards
-version=1.8.7
+name=Gremblor megaAVR Boards
+version=0.1.0
 
 # AVR compile variables
 # ---------------------
