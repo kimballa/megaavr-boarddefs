@@ -1,0 +1,5 @@
+
+* Describe UDPI programming process in README
+* Create board manager url repo that references this repo.
+  See https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+  as a place to start from.
