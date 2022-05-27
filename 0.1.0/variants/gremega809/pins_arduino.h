@@ -26,77 +26,87 @@
 #include <avr/pgmspace.h>
 #include "timers.h"
 
-#define NUM_DIGITAL_PINS            22 // (14 on digital headers + 8 on analog headers)
-#define NUM_ANALOG_INPUTS           14
-#define NUM_RESERVED_PINS           6  // (TOSC1/2, VREF, RESET, DEBUG USART Rx/Tx)
-#define NUM_INTERNALLY_USED_PINS    10 // (2 x Chip select + 2 x UART + 4 x IO + LED_BUILTIN + 1 unused pin)
+#define NUM_DIGITAL_PINS            21 // D0..D23 minus MOSI/MISO/SCK
+#define NUM_ANALOG_INPUTS           10
+#define NUM_RESERVED_PINS           1  // (RESET_L)
+#define NUM_INTERNALLY_USED_PINS    0  //
 #define NUM_I2C_PINS                2  // (SDA / SCL)
 #define NUM_SPI_PINS                3  // (MISO / MOSI / SCK)
 #define NUM_TOTAL_FREE_PINS         (NUM_DIGITAL_PINS)
 #define NUM_TOTAL_PINS              (NUM_DIGITAL_PINS + NUM_RESERVED_PINS + NUM_INTERNALLY_USED_PINS + NUM_I2C_PINS + NUM_SPI_PINS)
-#define ANALOG_INPUT_OFFSET         14
+#define ANALOG_INPUT_OFFSET         10
 
 #define EXTERNAL_NUM_INTERRUPTS     48
 
-#define digitalPinHasPWM(p)         ((p) == 3 || (p) == 5 || (p) == 6 || (p) == 9 || (p) == 10)
+#define digitalPinHasPWM(p)         ((p) == 2 || (p) == 3 || ((p) >= 8 && (p) <= 15))
 
 #define SPI_MUX       (PORTMUX_SPI0_ALT2_gc)
-#define PIN_SPI_MISO  (12)
-#define PIN_SPI_SCK   (13)
-#define PIN_SPI_MOSI  (11)
-#define PIN_SPI_SS    (8)
+#define PIN_SPI_MISO  (17)
+#define PIN_SPI_SCK   (18)
+#define PIN_SPI_MOSI  (16)
+#define PIN_SPI_SS    (19)
 
 static const uint8_t SS   = PIN_SPI_SS;
 static const uint8_t MOSI = PIN_SPI_MOSI;
 static const uint8_t MISO = PIN_SPI_MISO;
 static const uint8_t SCK  = PIN_SPI_SCK;
 
-#define PIN_WIRE_SDA  (22)
-#define PIN_WIRE_SCL  (23)
+#define PIN_WIRE_SDA  (25)
+#define PIN_WIRE_SCL  (26)
 
 static const uint8_t SDA = PIN_WIRE_SDA;
 static const uint8_t SCL = PIN_WIRE_SCL;
 
 // Main USART available on Arduino header pins
-// USART1 on mega4809 (alternative pins)
+// USART0 on mega4809 (default pins)
 // Mapped to HWSERIAL0 in Serial library
-#define HWSERIAL1 (&USART1)
-#define HWSERIAL1_DRE_VECTOR (USART1_DRE_vect)
-#define HWSERIAL1_DRE_VECTOR_NUM (USART1_DRE_vect_num)
-#define HWSERIAL1_RXC_VECTOR (USART1_RXC_vect)
-#define HWSERIAL1_MUX (PORTMUX_USART1_ALT1_gc)
-#define PIN_WIRE_HWSERIAL1_RX (0)
-#define PIN_WIRE_HWSERIAL1_TX (1)
+#define HWSERIAL1 (&USART0)
+#define HWSERIAL1_DRE_VECTOR (USART0_DRE_vect)
+#define HWSERIAL1_DRE_VECTOR_NUM (USART0_DRE_vect_num)
+#define HWSERIAL1_RXC_VECTOR (USART0_RXC_vect)
+#define HWSERIAL1_MUX (PORTMUX_USART0_DEFAULT_gc)
+#define PIN_WIRE_HWSERIAL1_RX (1)
+#define PIN_WIRE_HWSERIAL1_TX (0)
 
-// Uno2 Debug USART (not available on headers, only via the EDGB virtual COM port)
-// USART3 on mega4809 (alternative pins)
+// Uno2 Debug USART
+// USART3 on mega4809 (default pins)
 // Mapped to HWSERIAL1 in Serial library
 #define HWSERIAL0 (&USART3)
 #define HWSERIAL0_DRE_VECTOR (USART3_DRE_vect)
 #define HWSERIAL0_DRE_VECTOR_NUM (USART3_DRE_vect_num)
 #define HWSERIAL0_RXC_VECTOR (USART3_RXC_vect)
-#define HWSERIAL0_MUX (PORTMUX_USART3_ALT1_gc)
-#define PIN_WIRE_HWSERIAL0_RX (24)
-#define PIN_WIRE_HWSERIAL0_TX (25)
+#define HWSERIAL0_MUX (PORTMUX_USART3_DEFAULT_gc)
+#define PIN_WIRE_HWSERIAL0_RX (7)
+#define PIN_WIRE_HWSERIAL0_TX (6)
 
-#define HWSERIAL2_MUX (PORTMUX_USART0_NONE_gc)
+// HWSERIAL2 mapped to USART1
+#define HWSERIAL2 (&USART1)
+#define HWSERIAL2_DRE_VECTOR (USART1_DRE_vect)
+#define HWSERIAL2_DRE_VECTOR_NUM (USART1_DRE_vect_num)
+#define HWSERIAL2_RXC_VECTOR (USART1_RXC_vect)
+#define HWSERIAL2_MUX (PORTMUX_USART1_DEFAULT_gc)
+#define PIN_WIRE_HWSERIAL2_RX (9)
+#define PIN_WIRE_HWSERIAL2_TX (8)
+
 #define HWSERIAL3_MUX (PORTMUX_USART2_NONE_gc)
 
-#define TWI_MUX (PORTMUX_TWI0_DEFAULT_gc) //PORTMUX_TWI0_ALT1_gc
+#define TWI_MUX (PORTMUX_TWI0_ALT2_gc) // (PORTMUX_TWI0_DEFAULT_gc)
 
 #define MUX_SPI (SPI_MUX)
 #define SPI_INTERFACES_COUNT 1
 
-#define LED_BUILTIN   (13)
+#define LED_BUILTIN   (23)
 
-#define PIN_A0   (14) // AIN3
-#define PIN_A1   (15) // AIN2
-#define PIN_A2   (16) // AIN1
-#define PIN_A3   (17) // AIN0
-#define PIN_A4   (18) // PF2 / AIN12
-#define PIN_A5   (19) // PF3 / AIN13
-#define PIN_A6   (20) // AIN5
-#define PIN_A7   (21) // AIN4
+#define PIN_A0   (10)
+#define PIN_A1   (11)
+#define PIN_A2   (12)
+#define PIN_A3   (13)
+#define PIN_A4   (14)
+#define PIN_A5   (15)
+#define PIN_A6   (16)
+#define PIN_A7   (17)
+#define PIN_A8   (18)
+#define PIN_A9   (19)
 
 static const uint8_t A0 = PIN_A0;
 static const uint8_t A1 = PIN_A1;
@@ -106,6 +116,8 @@ static const uint8_t A4 = PIN_A4;
 static const uint8_t A5 = PIN_A5;
 static const uint8_t A6 = PIN_A6;
 static const uint8_t A7 = PIN_A7;
+static const uint8_t A8 = PIN_A8;
+static const uint8_t A9 = PIN_A9;
 
 #define PINS_COUNT    (40u)
 
@@ -115,6 +127,9 @@ static const uint8_t A7 = PIN_A7;
 // for the analog output (software PWM).  Analog input
 // pins are a separate set.
 
+// TODO(aaron): This graphic does NOT reflect the Gremega809 breakout digital or analog pin
+// assignments. Refer to PDF for proper pin mapping.
+//
 // ATMEGA4809 / ARDUINO
 //
 //                     (SCL)(SDA) (7)  (2)                 (R)  (3~) (6~)
@@ -143,132 +158,138 @@ static const uint8_t A7 = PIN_A7;
 //
 
 const uint8_t digital_pin_to_port[] = {
-  PC, // 0 PC5/USART1_Rx
-  PC, // 1 PC4/USART1_Tx
-  PA, // 2 PA0
-  PF, // 3 PF5
-  PC, // 4 PC6
-  PB, // 5 PB2
-  PF, // 6 PF4
-  PA, // 7 PA1
-  PE, // 8 PE3
-  PB, // 9 PB0
-  PB, // 10 PB1
-  PE, // 11 PE0
-  PE, // 12 PE1
-  PE, // 13 PE2
-  PD, // 14 PD3/AI3
-  PD, // 15 PD2/AI2
-  PD, // 16 PD1/AI1
-  PD, // 17 PD0/AI0
-  PF, // 18 PF2/AI12
-  PF, // 19 PF3/AI13
-  PD, // 20 PD4/AI4
-  PD, // 21 PD5/AI5
-  PA, // 22 PA2/TWI_SDA
-  PA, // 23 PA3/TWI_SCL
-  PB, // 24 PB5/USART3_Rx
-  PB, // 25 PB4/USART3_Tx
+  PA, // 0 PA0/USART0_Tx
+  PA, // 1 PA1/USART0_Rx
+  PA, // 2 PA2
+  PA, // 3 PA3
+  PA, // 4 PA6
+  PA, // 5 PA7
+  PB, // 6 PB0/USART3_Tx
+  PB, // 7 PB1/USART3_Rx
+  PC, // 8 PC0/USART1_Tx
+  PC, // 9 PC1/USART1_Rx
+  PD, // 10 PD0/AI0
+  PD, // 11 PD1/AI1
+  PD, // 12 PD2/AI2
+  PD, // 13 PD3/AI3
+  PD, // 14 PD4/AI4
+  PD, // 15 PD5/AI5
+  PE, // 16 PE0/AI8/MOSI
+  PE, // 17 PE1/AI9/MISO
+  PE, // 18 PE2/AI10/SCK
+  PE, // 19 PE3/AI11/SS
+  PF, // 20 PF0
+  PF, // 21 PF1
+  PF, // 22 PF2
+  PF, // 23 PF3/LED
+  PF, // 24 PF6/RESET_L
+  PC, // 25 PC2/TWI_SDA
+  PC, // 26 PC3/TWI_SCL
 };
 
 /* Use this for accessing PINnCTRL register */
 const uint8_t digital_pin_to_bit_position[] = {
-  PIN5_bp,  // 0 PC5/USART1_Rx
-  PIN4_bp,  // 1 PC4/USART1_Tx
-  PIN0_bp,  // 2 PA0
-  PIN5_bp,  // 3 PF5
-  PIN6_bp,  // 4 PC6
-  PIN2_bp,  // 5 PB2
-  PIN4_bp,  // 6 PF4
-  PIN1_bp,  // 7 PA1
-  PIN3_bp,  // 8 PE3
-  PIN0_bp,  // 9 PB0
-  PIN1_bp,  // 10 PB1
-  PIN0_bp,  // 11 PE0
-  PIN1_bp,  // 12 PE1
-  PIN2_bp,  // 13 PE2
-  PIN3_bp,  // 14 PD3/AI3
-  PIN2_bp,  // 15 PD2/AI2
-  PIN1_bp,  // 16 PD1/AI1
-  PIN0_bp,  // 17 PD0/AI0
-  PIN2_bp,  // 18 PF2/AI12
-  PIN3_bp,  // 19 PF3/AI13
-  PIN4_bp,  // 20 PD4/AI4
-  PIN5_bp,  // 21 PD5/AI5
-  PIN2_bp,  // 22 PA2/TWI_SDA
-  PIN3_bp,  // 23 PA3/TWI_SCL
-  PIN5_bp,  // 24 PB5/USART3_Rx
-  PIN4_bp,  // 25 PB4/USART3_Tx
+  PIN0_bp,  // 0 PA0/USART0_Tx
+  PIN1_bp,  // 1 PA1/USART0_Rx
+  PIN2_bp,  // 2 PA2
+  PIN3_bp,  // 3 PA3
+  PIN6_bp,  // 4 PA6
+  PIN7_bp,  // 5 PA7
+  PIN0_bp,  // 6 PB0/USART3_Tx
+  PIN1_bp,  // 7 PB1/USART3_Rx
+  PIN0_bp,  // 8 PC0/USART1_Tx
+  PIN1_bp,  // 9 PC1/USART1_Rx
+  PIN0_bp,  // 10 PD0/AI0
+  PIN1_bp,  // 11 PD1/AI1
+  PIN2_bp,  // 12 PD2/AI2
+  PIN3_bp,  // 13 PD3/AI3
+  PIN4_bp,  // 14 PD4/AI4
+  PIN5_bp,  // 15 PD5/AI5
+  PIN0_bp,  // 16 PE0/AI8/MOSI
+  PIN1_bp,  // 17 PE1/AI9/MISO
+  PIN2_bp,  // 18 PE2/AI10/SCK
+  PIN3_bp,  // 19 PE3/AI11/SS
+  PIN0_bp,  // 20 PF0
+  PIN1_bp,  // 21 PF1
+  PIN2_bp,  // 22 PF2
+  PIN3_bp,  // 23 PF3/LED
+  PIN6_bp,  // 24 PF6/RESET_L
+  PIN2_bp,  // 25 PC2/TWI_SDA
+  PIN3_bp,  // 26 PC3/TWI_SCL
 };
 
 /* Use this for accessing PINnCTRL register */
 const uint8_t digital_pin_to_bit_mask[] = {
-  PIN5_bm,  // 0 PC5/USART1_Rx
-  PIN4_bm,  // 1 PC4/USART1_Tx
-  PIN0_bm,  // 2 PA0
-  PIN5_bm,  // 3 PF5
-  PIN6_bm,  // 4 PC6
-  PIN2_bm,  // 5 PB2
-  PIN4_bm,  // 6 PF4
-  PIN1_bm,  // 7 PA1
-  PIN3_bm,  // 8 PE3
-  PIN0_bm,  // 9 PB0
-  PIN1_bm,  // 10 PB1
-  PIN0_bm,  // 11 PE0
-  PIN1_bm,  // 12 PE1
-  PIN2_bm,  // 13 PE2
-  PIN3_bm,  // 14 PD3/AI3
-  PIN2_bm,  // 15 PD2/AI2
-  PIN1_bm,  // 16 PD1/AI1
-  PIN0_bm,  // 17 PD0/AI0
-  PIN2_bm,  // 18 PF2/AI12
-  PIN3_bm,  // 19 PF3/AI13
-  PIN4_bm,  // 20 PD4/AI4
-  PIN5_bm,  // 21 PD5/AI5
-  PIN2_bm,  // 22 PA2/TWI_SDA
-  PIN3_bm,  // 23 PA3/TWI_SCL
-  PIN5_bm,  // 24 PB5/USART3_Rx
-  PIN4_bm,  // 25 PB4/USART3_Tx
+  PIN0_bm,  // 0 PA0/USART0_Tx
+  PIN1_bm,  // 1 PA1/USART0_Rx
+  PIN2_bm,  // 2 PA2
+  PIN3_bm,  // 3 PA3
+  PIN6_bm,  // 4 PA6
+  PIN7_bm,  // 5 PA7
+  PIN0_bm,  // 6 PB0/USART3_Tx
+  PIN1_bm,  // 7 PB1/USART3_Rx
+  PIN0_bm,  // 8 PC0/USART1_Tx
+  PIN1_bm,  // 9 PC1/USART1_Rx
+  PIN0_bm,  // 10 PD0/AI0
+  PIN1_bm,  // 11 PD1/AI1
+  PIN2_bm,  // 12 PD2/AI2
+  PIN3_bm,  // 13 PD3/AI3
+  PIN4_bm,  // 14 PD4/AI4
+  PIN5_bm,  // 15 PD5/AI5
+  PIN0_bm,  // 16 PE0/AI8/MOSI
+  PIN1_bm,  // 17 PE1/AI9/MISO
+  PIN2_bm,  // 18 PE2/AI10/SCK
+  PIN3_bm,  // 19 PE3/AI11/SS
+  PIN0_bm,  // 20 PF0
+  PIN1_bm,  // 21 PF1
+  PIN2_bm,  // 22 PF2
+  PIN3_bm,  // 23 PF3/LED
+  PIN6_bm,  // 24 PF6/RESET_L
+  PIN2_bm,  // 25 PC2/TWI_SDA
+  PIN3_bm,  // 26 PC3/TWI_SCL
 };
 
 const uint8_t digital_pin_to_timer[] = {
-  NOT_ON_TIMER,  // 0 PC5/USART1_Rx
-  NOT_ON_TIMER,  // 1 PC4/USART1_Tx
-  NOT_ON_TIMER,  // 2 PA0
-  TIMERB1,       // 3 PF5
-  NOT_ON_TIMER,  // 4 PC6
-  TIMERA0,       // 5 PB2
-  TIMERB0,       // 6 PF4
-  NOT_ON_TIMER,  // 7 PA1
-  NOT_ON_TIMER,  // 8 PE3
-  TIMERA0,       // 9 PB0
-  TIMERA0,       // 10 PB1
-  NOT_ON_TIMER,  // 11 PE0
-  NOT_ON_TIMER,  // 12 PE1
-  NOT_ON_TIMER,  // 13 PE2
-  NOT_ON_TIMER,  // 14 PD3/AI3
-  NOT_ON_TIMER,  // 15 PD2/AI2
-  NOT_ON_TIMER,  // 16 PD1/AI1
-  NOT_ON_TIMER,  // 17 PD0/AI0
-  NOT_ON_TIMER,  // 18 PF2/AI12
-  NOT_ON_TIMER,  // 19 PF3/AI13
-  NOT_ON_TIMER,  // 20 PD4/AI4
-  NOT_ON_TIMER,  // 21 PD5/AI5
-  NOT_ON_TIMER,  // 22 PA2/TWI_SDA
-  NOT_ON_TIMER,  // 23 PA3/TWI_SCL
-  NOT_ON_TIMER,  // 24 PB5/USART3_Rx
-  NOT_ON_TIMER,  // 25 PB4/USART3_Tx
+  NOT_ON_TIMER,  // 0 PA0/USART0_Tx
+  NOT_ON_TIMER,  // 1 PA1/USART0_Rx
+  TIMERB0,       // 2 PA2
+  TIMERB1,       // 3 PA3
+  NOT_ON_TIMER,  // 4 PA6
+  NOT_ON_TIMER,  // 5 PA7
+  NOT_ON_TIMER,  // 6 PB0/USART3_Tx
+  NOT_ON_TIMER,  // 7 PB1/USART3_Rx
+  TIMERB2,       // 8 PC0/USART1_Tx
+  TIMERB3,       // 9 PC1/USART1_Rx
+  TIMERA0,       // 10 PD0/AI0
+  TIMERA0,       // 11 PD1/AI1
+  TIMERA0,       // 12 PD2/AI2
+  TIMERA0,       // 13 PD3/AI3
+  TIMERA0,       // 14 PD4/AI4
+  TIMERA0,       // 15 PD5/AI5
+  NOT_ON_TIMER,  // 16 PE0/AI8/MOSI
+  NOT_ON_TIMER,  // 17 PE1/AI9/MISO
+  NOT_ON_TIMER,  // 18 PE2/AI10/SCK
+  NOT_ON_TIMER,  // 19 PE3/AI11/SS
+  NOT_ON_TIMER,  // 20 PF0
+  NOT_ON_TIMER,  // 21 PF1
+  NOT_ON_TIMER,  // 22 PF2
+  NOT_ON_TIMER,  // 23 PF3/LED
+  NOT_ON_TIMER,  // 24 PF6/RESET_L
+  NOT_ON_TIMER,  // 25 PC2/TWI_SDA
+  NOT_ON_TIMER,  // 26 PC3/TWI_SCL
 };
 
 const uint8_t analog_pin_to_channel[] = {
-  3,
-  2,
-  1,
   0,
-  12,
-  13,
+  1,
+  2,
+  3,
   4,
-  5
+  5,
+  8,
+  9,
+  10,
+  11,
 };
 
 #endif

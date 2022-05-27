@@ -7,10 +7,10 @@
 
 void setup_timers() {
 
-  //  TYPE A TIMER  
+  //  TYPE A TIMER
 
-  // PORTMUX setting for TCA -> all outputs [0:2] point to PORTB pins [0:2]
-  PORTMUX.TCAROUTEA  = PORTMUX_TCA0_PORTB_gc;
+  // PORTMUX setting for TCA -> all outputs [0:2] point to PORTD pins [0:2]
+  PORTMUX.TCAROUTEA  = PORTMUX_TCA0_PORTD_gc;
 
   // Setup timers for single slope PWM, but do not enable, will do in analogWrite()
   TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc;
@@ -26,21 +26,20 @@ void setup_timers() {
   // Use DIV64 prescaler (giving 250kHz clock), enable TCA timer
   TCA0.SINGLE.CTRLA = (TCA_SINGLE_CLKSEL_DIV64_gc) | (TCA_SINGLE_ENABLE_bm);
 
-  //  TYPE B TIMERS 
-  
-  // Setup TCB0 routing
-  #if defined(TCB0)
-    PORTMUX.TCBROUTEA |= PORTMUX_TCB0_bm; // Route signal to PF4
+  //  TYPE B TIMERS
+
+  // Setup TCB2 routing
+  #if defined(TCB2)
+    PORTMUX.TCBROUTEA  |= PORTMUX_TCB2_bm; // Route signal to PC0
   #endif
-  
-  // Setup TCB1 routing
-  #if defined(TCB1)
-    PORTMUX.TCBROUTEA  |= PORTMUX_TCB1_bm; // Route signal to PF5
+  #if defined(TCB3)
+    PORTMUX.TCBROUTEA  |= PORTMUX_TCB3_bm; // Route signal to PC1
   #endif
+  // TCB0 and 1 on default ports (PA2, PA3);
 
   // Start with TCB0
   TCB_t *timer_B = (TCB_t *)&TCB0;
-  
+
   // Find end timer
   #if defined(TCB3)
     TCB_t *timer_B_end = (TCB_t *)&TCB3;
@@ -78,13 +77,13 @@ void setup_timers() {
 
   // Stuff for synchronizing PWM timers
 //   // Restart TCA to sync TCBs
-//   // should not be needed   
+//   // should not be needed
 //   TCA0.SINGLE.CTRLESET = TCA_SINGLE_CMD_RESTART_gc;
 //   TCA0.SINGLE.CTRLECLR = TCA_SINGLE_CMD_RESTART_gc;
 //
 //   timer_B = (TCB_t *)&TCB0;
 //
-//   // TCB are sync to TCA, remove setting 
+//   // TCB are sync to TCA, remove setting
 //   for (uint8_t digitial_pin_timer = (TIMERB0 - TIMERB0);
 //   digitial_pin_timer < (TIMERB3 - TIMERB0);
 //   digitial_pin_timer++)
@@ -92,7 +91,7 @@ void setup_timers() {
 //     // disable sync with tca
 //     timer_B->CTRLA &= ~ (TCB_SYNCUPD_bm);
 //
-//     // Add offset to register 
+//     // Add offset to register
 //     timer_B++;
 //
 //   }
@@ -101,12 +100,12 @@ void setup_timers() {
 FORCE_INLINE bool isDoubleBondedActive(uint8_t pin) {
   (void)pin;
 
-  /* Check if TWI is operating on double bonded pin (Master Enable is high 
-  in both Master and Slave mode for bus error detection, so this can 
+  /* Check if TWI is operating on double bonded pin (Master Enable is high
+  in both Master and Slave mode for bus error detection, so this can
   indicate an active state for Wire) */
   //if(((pin == PIN_A4) || (pin == PIN_A5)) && (TWI0.MCTRLA & TWI_ENABLE_bm)) return true;
 
-  /* Special check for SPI_SS double bonded pin -- no action if SPI is active 
+  /* Special check for SPI_SS double bonded pin -- no action if SPI is active
     (Using SPI Enable bit as indicator of SPI activity) */
   //if((pin == 10) && (SPI0.CTRLA & SPI_ENABLE_bm)) return true;
 
