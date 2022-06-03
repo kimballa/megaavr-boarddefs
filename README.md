@@ -23,7 +23,7 @@ The MegaAVR 809 breakout board must be programmed over the UDPI port.
 There are two basic ways to access this:
 * You can use a USB-to-serial adapter to create a serial connection directly from the
   programming computer to the MCU. Tie the RX and TX lines together with a shottky diode
-  from TX to RX or a 470R resistor. (See [Spence's
+  from TX to RX or a 4K7 resistor. (See [Spence's
   guidance](https://github.com/SpenceKonde/AVR-Guidance/blob/master/UPDI/jtag2updi.md)
   for more instructions.)
 * Use an external programmer device. You can make one from another Arduino.
